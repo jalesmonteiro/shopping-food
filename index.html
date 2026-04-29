@@ -28,6 +28,12 @@
 
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Dropdown do usuário: controle por classe 'open' para evitar desaparecimento prematuro */
+        .user-dropdown-menu { opacity: 0; transform: translateY(6px); pointer-events: none; visibility: hidden; transition: opacity 150ms ease, transform 150ms ease; }
+        .user-dropdown-menu.open { opacity: 1; transform: translateY(0); pointer-events: auto; visibility: visible; }
+            /* Caret rotation: rotate the SVG inside the toggle button when open */
+            #user-dropdown-toggle svg { transition: transform 150ms ease; transform-origin: center; }
+            #user-dropdown-toggle.open svg { transform: rotate(180deg); }
     </style>
 </head>
 <body class="antialiased">
@@ -60,11 +66,12 @@
                             <span id="cart-count" class="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">0</span>
                         </button>
                     </div>
-                    <div class="relative group">
-                        <button class="w-10 h-10 bg-gray-100 rounded-full overflow-hidden border-2 border-transparent hover:border-primary transition-all shadow-sm">
-                            <img id="user-avatar" src="" alt="User">
+                    <div id="user-dropdown" class="relative">
+                        <button id="user-dropdown-toggle" aria-haspopup="true" aria-expanded="false" class="flex items-center gap-2 px-2 py-1 w-auto bg-transparent rounded-full overflow-hidden border-2 border-transparent hover:border-primary transition-all shadow-sm">
+                            <img id="user-avatar" src="" alt="User" class="w-9 h-9 rounded-full object-cover">
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
                         </button>
-                        <div class="absolute right-0 top-full mt-1 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 opacity-0 invisible pointer-events-none transform translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto group-hover:translate-y-0 z-50">
+                        <div id="user-dropdown-menu" class="user-dropdown-menu absolute right-0 top-full mt-1 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
                             <div class="px-4 py-3 border-b border-gray-50 mb-2">
                                 <p id="user-dropdown-name" class="text-sm font-bold text-slate-800 truncate"></p>
                                 <p id="user-dropdown-role" class="text-[10px] font-black text-primary uppercase tracking-widest"></p>
@@ -305,6 +312,7 @@
                     document.getElementById('user-avatar').src = state.user.avatar;
                     document.getElementById('user-dropdown-name').innerText = state.user.nome;
                     document.getElementById('user-dropdown-role').innerText = state.user.role;
+                    if(typeof setupUserDropdown === 'function') setTimeout(() => setupUserDropdown(), 0);
                     
                     if(state.user.role === 'gerente' || state.user.role === 'admin') {
                         cartBtn.classList.add('hidden'); favsLink.classList.add('hidden');
@@ -320,17 +328,13 @@
 
             render() {
                 const navEl = document.querySelector('nav');
-                console.log('[ui.render] state.view=', state.view, 'state.user=', state.user ? state.user.email : null);
                 // Se usuário não autenticado e a view não for login/register, forçamos a renderização de login
                 const effectiveView = (!state.user && !['login', 'register'].includes(state.view)) ? 'login' : state.view;
-                console.log('[ui.render] effectiveView=', effectiveView);
                 if(navEl) {
                     if(effectiveView === 'login' || effectiveView === 'register') {
                         navEl.style.display = 'none';
-                        console.log('[ui.render] nav hidden (login/register)');
                     } else {
                         navEl.style.display = '';
-                        console.log('[ui.render] nav shown');
                     }
                 }
                 if(effectiveView === 'login') { this.renderLogin(); lucide.createIcons(); return; }
@@ -1077,7 +1081,53 @@
             }
         };
 
-        window.onload = () => { console.log('window.onload state.view=', state.view, 'state.user=', state.user ? state.user.email : null); ui.updateNav(); ui.render(); };
+        // Inicializa comportamento do dropdown do usuário: toggle por clique e fechamento ao clicar fora
+        let userDropdownDocListeners = false;
+        function setupUserDropdown() {
+            const wrapper = document.getElementById('user-dropdown');
+            const toggle = document.getElementById('user-dropdown-toggle');
+            const menu = document.getElementById('user-dropdown-menu');
+            if(!wrapper || !toggle || !menu) return;
+
+            const closeMenu = () => { menu.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); toggle.classList.remove('open'); };
+            const openMenu = () => { menu.classList.add('open'); toggle.setAttribute('aria-expanded', 'true'); toggle.classList.add('open'); };
+
+            // Toggle listener per element (bind once per DOM node)
+            if(!toggle.dataset.udInit) {
+                toggle.addEventListener('click', (e) => { e.stopPropagation(); menu.classList.contains('open') ? closeMenu() : openMenu(); });
+                toggle.dataset.udInit = '1';
+            }
+
+            // Menu internal links: close on click (bind once per node)
+            menu.querySelectorAll('a, button').forEach(el => {
+                if(!el.dataset.udClickInit) { el.addEventListener('click', () => closeMenu()); el.dataset.udClickInit = '1'; }
+            });
+
+            // Document-level listeners: add once globally
+            if(!userDropdownDocListeners) {
+                document.addEventListener('click', (e) => {
+                    if(!e.target.closest('#user-dropdown')) {
+                        document.querySelectorAll('.user-dropdown-menu.open').forEach(m => {
+                            m.classList.remove('open');
+                            const btn = m.parentElement ? m.parentElement.querySelector('#user-dropdown-toggle') : null;
+                            if(btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+                        });
+                    }
+                });
+                document.addEventListener('keydown', (e) => {
+                    if(e.key === 'Escape') {
+                        document.querySelectorAll('.user-dropdown-menu.open').forEach(m => {
+                            m.classList.remove('open');
+                            const btn = m.parentElement ? m.parentElement.querySelector('#user-dropdown-toggle') : null;
+                            if(btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+                        });
+                    }
+                });
+                userDropdownDocListeners = true;
+            }
+        }
+
+        window.onload = () => { ui.updateNav(); ui.render(); setupUserDropdown(); };
     </script>
 </body>
 </html>
