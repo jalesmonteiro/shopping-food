@@ -923,6 +923,53 @@
                 `;
             },
             
+            renderFavorites() {
+                const u = state.user;
+                const favStores = state.lojas.filter(l => u.favoritos.lojas.includes(l.id));
+                document.getElementById('app-view').innerHTML = `
+                    <h1 class="text-4xl font-black mb-12 text-slate-800 tracking-tight">O que você ama</h1>
+                    <section class="mb-14">
+                        <h2 class="text-xs font-black text-gray-400 uppercase mb-6 tracking-widest px-2"><i data-lucide="box" class="w-4 h-4 inline-block -mt-1"></i> Combos Montados</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            ${u.favoritos.combos.length ? u.favoritos.combos.map((combo, idx) => `
+                                <div class="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm flex flex-col hover:shadow-xl transition-all group">
+                                    <div class="flex justify-between items-start mb-6">
+                                        <div class="p-3 bg-amber-50 text-amber-500 rounded-2xl group-hover:scale-110 transition-transform"><i data-lucide="star"></i></div>
+                                        <button onclick="ui.toggleFav('combos', ${idx})" class="p-3 text-gray-300 hover:text-red-500 bg-gray-50 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
+                                    <h4 class="font-black text-xl mb-4 text-slate-800">Combo Master #${idx + 1}</h4>
+                                    <div class="space-y-2 mb-8 flex-1">
+                                        ${combo.data.map(d => `<p class="text-xs font-bold text-gray-500 border-b border-gray-50 pb-2"><span class="text-primary mr-1">x${d.qty}</span> ${d.item.nome}</p>`).join('')}
+                                    </div>
+                                    <button onclick="cartUI.loadComboById(${idx})" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-black text-sm hover:bg-slate-700">Jogar no Carrinho</button>
+                                </div>
+                            `).join('') : '<div class="text-gray-400 italic font-bold p-12 bg-white rounded-[3rem] border border-gray-100 text-center col-span-full">Nenhum combo. Crie um no carrinho!</div>'}
+                        </div>
+                    </section>
+                    <section>
+                        <h2 class="text-xs font-black text-gray-400 uppercase mb-6 tracking-widest px-2"><i data-lucide="map-pin" class="w-4 h-4 inline-block -mt-1"></i> Seus Destinos</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            ${favStores.map(l => `
+                                <div onclick="router.navigate('store', ${l.id})" class="p-6 bg-white rounded-[2.5rem] border border-gray-100 flex items-center gap-6 cursor-pointer hover:shadow-xl transition-all group">
+                                    <img src="${l.img}" class="w-20 h-20 rounded-[1.5rem] object-cover group-hover:scale-105 transition-transform">
+                                    <div><h4 class="font-black text-lg text-slate-800">${l.nome}</h4><p class="text-xs text-primary font-bold uppercase tracking-widest mt-1">${l.categoria}</p></div>
+                                </div>
+                            `).join('') || '<p class="text-gray-400 italic font-bold px-2 col-span-full">Nenhum restaurante favoritado.</p>'}
+                        </div>
+                    </section>
+                `;
+            },
+
+            toggleFav(type, id) {
+                if(type === 'combos') state.user.favoritos.combos.splice(id, 1);
+                else {
+                    const idx = state.user.favoritos[type].indexOf(id);
+                    if(idx > -1) state.user.favoritos[type].splice(idx, 1);
+                    else state.user.favoritos[type].push(id);
+                }
+                this.render();
+            },
+            
             // --- CÓDIGO DO CARRINHO E CHECKOUT ---
             openCheckoutModal() {
                 if(!state.cart.length) return alert("Seu carrinho está vazio.");
