@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyFood | Marketplace & Delivery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        :root { --primary: #FF5A00; --navy: #1A1C22; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: var(--navy); overflow-x: hidden; }
+        .bg-primary { background-color: var(--primary); }
+        .text-primary { color: var(--primary); }
+        .border-primary { border-color: var(--primary); }
+        .btn-primary { background-color: var(--primary); color: white; transition: all 0.2s; }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .store-card:hover img { transform: scale(1.05); }
+        .grayscale-filter { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
+        .nav-link { cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; transition: all 0.2s; }
+        .nav-link:hover { background: #f3f4f6; }
+        .active-nav { color: var(--primary); background: #fff1eb !important; }
+        input, select, textarea { outline: none; border: 1px solid #e5e7eb; transition: all 0.2s; border-radius: 0.75rem; padding: 0.75rem; width: 100%; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); ring: 2px var(--primary); }
+        
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- BARRA DE NAVEGAÇÃO -->
+    <nav class="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="router.goHome()">
+                    <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm">P</div>
+                    <span class="text-xl font-bold tracking-tight text-slate-800">Poly<span class="text-primary">Food</span></span>
+                </div>
+                <div id="main-menu" class="hidden md:flex items-center gap-2 text-sm font-medium text-gray-600">
+                    <a onclick="router.goHome()" id="nav-home" class="nav-link"><i data-lucide="home" class="w-4 h-4"></i> Início</a>
+                    <a id="nav-favs-link" onclick="router.goFavorites()" class="nav-link"><i data-lucide="heart" class="w-4 h-4"></i> Favoritos</a>
+                    <a id="nav-orders-link" onclick="router.navigate('orders')" class="nav-link"><i data-lucide="receipt" class="w-4 h-4"></i> Meus Pedidos</a>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div id="auth-buttons" class="flex gap-2">
+                    <button onclick="router.navigate('login')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors">Entrar</button>
+                    <button onclick="router.navigate('register')" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm">Cadastrar</button>
+                </div>
+
+                <div id="user-menu" class="hidden flex items-center gap-4">
+                    <div id="cart-btn-nav">
+                        <button onclick="cartUI.toggle()" class="relative p-2 text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+                            <i data-lucide="shopping-cart"></i>
+                            <span id="cart-count" class="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">0</span>
+                        </button>
+                    </div>
+                    <div class="relative group">
+                        <button class="w-10 h-10 bg-gray-100 rounded-full overflow-hidden border-2 border-transparent hover:border-primary transition-all shadow-sm">
+                            <img id="user-avatar" src="" alt="User">
+                        </button>
+                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 hidden group-hover:block z-50">
+                            <div class="px-4 py-3 border-b border-gray-50 mb-2">
+                                <p id="user-dropdown-name" class="text-sm font-bold text-slate-800 truncate"></p>
+                                <p id="user-dropdown-role" class="text-[10px] font-black text-primary uppercase tracking-widest"></p>
+                            </div>
+                            <a id="nav-profile-link" onclick="router.navigate('profile')" class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary cursor-pointer"><i data-lucide="user" class="w-4 h-4"></i> Meu Perfil</a>
+                            <a id="nav-settings-link" onclick="router.navigate('settings')" class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary cursor-pointer"><i data-lucide="settings" class="w-4 h-4"></i> Configurações</a>
+                            <a onclick="auth.logout()" class="flex items-center gap-3 px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 cursor-pointer mt-1"><i data-lucide="log-out" class="w-4 h-4"></i> Sair da Conta</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ÁREA DE CONTEÚDO DINÂMICO -->
+    <main id="app-view" class="max-w-7xl mx-auto px-4 py-8 min-h-[80vh]">
+        <!-- Renderizado via JS -->
+    </main>
+
+    <!-- CARRINHO LATERAL -->
+    <div id="cart-sidebar" class="fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-2xl z-[60] transform translate-x-full transition-transform duration-300 border-l border-gray-100">
+        <div class="flex flex-col h-full">
+            <div class="p-6 border-b border-gray-50 flex items-center justify-between bg-white">
+                <h2 class="text-xl font-black text-slate-800">Seu Pedido</h2>
+                <button onclick="cartUI.toggle()" class="p-2 text-gray-400 hover:text-slate-800 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="x"></i></button>
+            </div>
+            <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50"></div>
+            <div class="p-6 border-t border-gray-100 bg-white">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-gray-500 font-bold text-sm uppercase tracking-widest">Subtotal</span>
+                    <span id="cart-total" class="text-3xl font-black text-slate-800">R$ 0,00</span>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <button onclick="cartUI.saveAsCombo()" id="fav-cart-btn" class="w-full bg-amber-50 text-amber-600 border border-amber-100 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                        <i data-lucide="star" class="w-4 h-4"></i> <span id="fav-cart-btn-text">Favoritar Combo</span>
+                    </button>
+                    <button onclick="ui.openCheckoutModal()" id="checkout-btn" class="w-full btn-primary py-4 rounded-2xl font-black text-lg shadow-lg shadow-orange-100 disabled:opacity-50 disabled:cursor-not-allowed">Encerrar Pedido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE IDADE -->
+    <div id="age-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[3rem] max-w-md w-full p-10 text-center shadow-2xl">
+            <div class="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-black shadow-inner">18+</div>
+            <h3 class="text-2xl font-black mb-3 text-slate-800">Verificação de Idade</h3>
+            <p class="text-gray-500 mb-10 font-medium">Sua idade não está confirmada no perfil. Você possui 18 anos ou mais?</p>
+            <div class="flex gap-4">
+                <button onclick="ui.closeAgeModal(false)" class="flex-1 py-4 border border-gray-200 text-gray-600 rounded-2xl font-bold hover:bg-gray-50 transition-colors">Sou Menor</button>
+                <button onclick="ui.closeAgeModal(true)" class="flex-1 py-4 bg-slate-800 text-white hover:bg-slate-700 rounded-2xl font-black shadow-lg transition-colors">Sim, Tenho 18+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CHECKOUT -->
+    <div id="checkout-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[3rem] max-w-md w-full p-10 shadow-2xl">
+            <div class="w-20 h-20 bg-orange-50 text-primary rounded-[1.5rem] flex items-center justify-center mb-6 shadow-inner">
+                <i data-lucide="map-pin" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-3xl font-black mb-2 text-slate-800 tracking-tight">Confirmar Entrega</h3>
+            <p class="text-gray-500 font-medium mb-6">Enviaremos seu pedido para o endereço abaixo:</p>
+            <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-8">
+                <p id="checkout-address" class="font-bold text-slate-800"></p>
+                <p class="text-xs font-bold text-primary mt-2 cursor-pointer hover:underline" onclick="ui.closeCheckoutModal(); router.navigate('settings')">Alterar endereço</p>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="ui.closeCheckoutModal()" class="flex-1 py-4 border border-gray-200 text-gray-600 rounded-2xl font-bold hover:bg-gray-50 transition-colors">Voltar</button>
+                <button onclick="cartUI.processCheckout()" class="flex-1 py-4 btn-primary rounded-2xl font-black shadow-lg transition-colors">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CLASSES E LOGICA OO ---
+
+        const AutenticavelMixin = {
+            validarCredenciais(email, senha) { return this.email === email && this._senha === senha; },
+            validarSenhaAtual(senha) { return this._senha === senha; },
+            atualizarSenha(nova) { this._senha = nova; }
+        };
+
+        class Usuario {
+            constructor(nome, email, senha, nascimento = '', endereco = '') {
+                this.nome = nome;
+                this.email = email;
+                this._senha = senha;
+                this.nascimento = nascimento;
+                this.endereco = endereco;
+                this.role = 'cliente';
+                this.favoritos = { lojas: [], itens: [], combos: [] };
+                Object.assign(this, AutenticavelMixin);
+            }
+            get avatar() { return `https://api.dicebear.com/7.x/avataaars/svg?seed=${this.nome}&backgroundColor=f8f9fa`; }
+            get idade() {
+                if(!this.nascimento) return null;
+                const hoje = new Date(); const nasc = new Date(this.nascimento);
+                let idade = hoje.getFullYear() - nasc.getFullYear();
+                const m = hoje.getMonth() - nasc.getMonth();
+                if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+                return idade;
+            }
+        }
+
+        class Gerente extends Usuario {
+            constructor(nome, email, senha, idLoja) {
+                super(nome, email, senha);
+                this.role = 'gerente';
+                this.idLoja = idLoja; 
+            }
+        }
+
+        class ItemCardapio {
+            constructor(id, nome, preco, img, tipo, desc = "") {
+                this.id = id; this.nome = nome; this._preco = preco; 
+                this.img = img; this.tipo = tipo; this.descricao = desc; this.disponivel = true;
+            }
+            getPreco() { return this._preco; }
+            setPreco(val) { if(val >= 0) this._preco = val; }
+            toggleStatus() { this.disponivel = !this.disponivel; }
+        }
+
+        class BebidaAlcoolica extends ItemCardapio {
+            constructor(id, nome, preco, img, teor, desc = "") {
+                super(id, nome, preco, img, 'bebida', desc);
+                this.teor = teor; this.isAlcoolico = true;
+            }
+            getPreco() { return this._preco * 1.15; }
+        }
+
+        class Estabelecimento {
+            constructor(id, nome, img, cat, end = '', tel = '') {
+                this.id = id; this.nome = nome; this.img = img; this.categoria = cat;
+                this.endereco = end; this.telefone = tel;
+                this.cardapio = [];
+                this.horarios = {
+                    seg: { ab: 10, fe: 22 }, ter: { ab: 10, fe: 22 }, qua: { ab: 10, fe: 22 },
+                    qui: { ab: 10, fe: 22 }, sex: { ab: 10, fe: 23 }, sab: { ab: 11, fe: 23 },
+                    dom: { ab: 11, fe: 21 }, feriado: { ab: 12, fe: 20 }
+                };
+            }
+            estaAberto() {
+                const agora = new Date();
+                const dias = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+                const h = this.horarios[dias[agora.getDay()]];
+                return agora.getHours() >= h.ab && agora.getHours() < h.fe;
+            }
+        }
+
+        class Pedido {
+            constructor(id, clienteEmail, lojaId, itens, total, endereco) {
+                this.id = id;
+                this.clienteEmail = clienteEmail;
+                this.lojaId = lojaId;
+                this.itens = itens; // [{item, qty}]
+                this.total = total;
+                this.endereco = endereco;
+                this.status = 'pendente'; // pendente, enviado, concluido
+                this.dataHora = new Date();
+            }
+            get dataFormatada() { return this.dataHora.toLocaleString('pt-BR'); }
+        }
+
+        // --- ESTADO GLOBAL ---
+        const state = {
+            user: null, view: 'home', search: '', filterType: 'todos',
+            lojas: [], usuarios: [], cart: [], pedidos: [],
+            pendingItem: null, pendingQty: 1, managerTab: 'cardapio'
+        };
+
+        // --- SEED DATA ---
+        const e1 = new Estabelecimento(1, "Burger King", "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800", "Hamburgueria", "Av. Senador Salgado Filho, 2000", "(84) 3222-1010");
+        e1.cardapio.push(
+            new ItemCardapio(101, "Whopper Tradicional", 32.0, "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", "lanche", "O clássico grelhado no fogo."),
+            new BebidaAlcoolica(102, "Cerveja Heineken", 14.0, "https://images.unsplash.com/photo-1618885472179-5e474019f2a9?w=400", 5.0, "Long neck gelada.")
+        );
+        const e2 = new Estabelecimento(2, "Pizza Hut", "https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=800", "Pizzaria", "Shopping Center, Lj 2", "(84) 4004-1010");
+        e2.cardapio.push(new ItemCardapio(201, "Pizza Pepperoni", 48.0, "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400", "pizza", "Massa pan crocante."));
+        state.lojas = [e1, e2];
+
+        state.usuarios = [
+            new Usuario("João Cliente", "cliente@email.com", "cliente", "1990-05-15", "Rua das Laranjeiras, 45, Bairro Alecrim"),
+            new Gerente("Carlos Gerente", "gerente@email.com", "gerente", 1),
+            new Usuario("Admin Master", "admin@email.com", "admin")
+        ];
+        state.usuarios[2].role = 'admin';
+
+        // --- MÁSCARAS E FORMATAÇÃO ---
+        const formatCurrency = (val) => {
+            const clean = String(val).replace(/\D/g, "");
+            return clean ? "R$ " + new Intl.NumberFormat("pt-BR", {minimumFractionDigits: 2}).format(parseFloat(clean)/100) : "";
+        };
+        const parseCurrency = (val) => parseFloat(String(val).replace("R$ ", "").replace(/\./g, "").replace(",", ".")) || 0;
+
+        // --- AUTH & ROUTING ---
+        const auth = {
+            login(email, senha) {
+                const u = state.usuarios.find(x => x.email === email && (senha === '' || x.validarSenhaAtual(senha)));
+                if (u) { state.user = u; router.goHome(); } 
+                else alert("Credenciais inválidas. Use os atalhos.");
+            },
+            register(nome, email, senha, nascimento) {
+                const novo = new Usuario(nome, email, senha, nascimento);
+                state.usuarios.push(novo); state.user = novo; router.goHome();
+            },
+            logout() { state.user = null; state.cart = []; router.navigate('login'); }
+        };
+
+        const router = {
+            navigate(view, params = null) {
+                state.view = view; state.params = params;
+                ui.updateNav(); ui.render(); window.scrollTo(0,0);
+            },
+            goHome() { 
+                if(!state.user) this.navigate('login');
+                else if(state.user.role === 'gerente') this.navigate('manager_dashboard');
+                else if(state.user.role === 'admin') this.navigate('admin_dashboard');
+                else this.navigate('home'); 
+            },
+            goFavorites() { this.navigate('favorites'); }
+        };
+
+        // --- UI RENDERER ---
+        const ui = {
+            updateNav() {
+                const userMenu = document.getElementById('user-menu');
+                const authBtns = document.getElementById('auth-buttons');
+                const mainMenu = document.getElementById('main-menu');
+                const cartBtn = document.getElementById('cart-btn-nav');
+                const favsLink = document.getElementById('nav-favs-link');
+                const pLink = document.getElementById('nav-profile-link');
+                const sLink = document.getElementById('nav-settings-link');
+                const ordersLink = document.getElementById('nav-orders-link');
+                
+                if(state.user) {
+                    authBtns.classList.add('hidden'); userMenu.classList.remove('hidden'); mainMenu.classList.remove('hidden');
+                    document.getElementById('user-avatar').src = state.user.avatar;
+                    document.getElementById('user-dropdown-name').innerText = state.user.nome;
+                    document.getElementById('user-dropdown-role').innerText = state.user.role;
+                    
+                    if(state.user.role === 'gerente' || state.user.role === 'admin') {
+                        cartBtn.classList.add('hidden'); favsLink.classList.add('hidden');
+                        pLink.classList.add('hidden'); sLink.classList.add('hidden'); ordersLink.classList.add('hidden');
+                    } else {
+                        cartBtn.classList.remove('hidden'); favsLink.classList.remove('hidden');
+                        pLink.classList.remove('hidden'); sLink.classList.remove('hidden'); ordersLink.classList.remove('hidden');
+                    }
+                } else {
+                    authBtns.classList.remove('hidden'); userMenu.classList.add('hidden'); mainMenu.classList.add('hidden');
+                }
+            },
+
+            render() {
+                if(!state.user && !['login', 'register'].includes(state.view)) { this.renderLogin(); return; }
+                switch(state.view) {
+                    case 'home': this.renderHome(); break;
+                    case 'login': this.renderLogin(); break;
+                    case 'register': this.renderRegister(); break;
+                    case 'store': this.renderStore(); break;
+                    case 'store_profile': this.renderStoreProfile(); break;
+                    case 'favorites': this.renderFavorites(); break;
+                    case 'orders': this.renderOrders(); break;
+                    case 'profile': this.renderProfile(); break;
+                    case 'settings': this.renderSettings(); break;
+                    case 'manager_dashboard': this.renderManagerDashboard(); break;
+                    case 'admin_dashboard': this.renderAdminDashboard(); break;
+                }
+                lucide.createIcons();
+            },
+
+            // ================= TELAS DO CLIENTE =================
+            renderHome() {
+                const filtered = state.lojas.filter(l => l.nome.toLowerCase().includes(state.search.toLowerCase()));
+                document.getElementById('app-view').innerHTML = `
+                    <div class="mb-12">
+                        <h1 class="text-4xl font-black text-slate-800 mb-2 tracking-tight">Olá, ${state.user.nome}!</h1>
+                        <p class="text-gray-500 mb-8 font-medium text-lg">Os melhores restaurantes escolhidos para você.</p>
+                        <div class="relative max-w-xl shadow-xl shadow-gray-100 rounded-[2rem]">
+                            <i data-lucide="search" class="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-6 h-6"></i>
+                            <input type="text" placeholder="Qual a pedida de hoje?" value="${state.search}"
+                                   oninput="state.search = this.value; ui.renderHome()"
+                                   class="w-full pl-16 pr-6 py-6 border-none focus:ring-2 focus:ring-primary rounded-[2rem] bg-white font-bold text-slate-800">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${filtered.map(l => `
+                            <div onclick="router.navigate('store', ${l.id})" class="bg-white rounded-[3rem] overflow-hidden border border-gray-100 cursor-pointer group hover:shadow-xl transition-all ${!l.estaAberto() ? 'grayscale-filter' : ''}">
+                                <div class="relative h-60 overflow-hidden">
+                                    <img src="${l.img}" class="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700">
+                                    <button onclick="event.stopPropagation(); ui.toggleFav('lojas', ${l.id})" class="absolute top-5 right-5 p-3 bg-white/90 backdrop-blur rounded-2xl shadow-md transition-transform hover:scale-110">
+                                        <i data-lucide="heart" class="w-5 h-5 ${state.user.favoritos.lojas.includes(l.id) ? 'fill-red-500 text-red-500' : 'text-gray-300'}"></i>
+                                    </button>
+                                </div>
+                                <div class="p-8">
+                                    <h3 class="font-black text-2xl mb-1 text-slate-800">${l.nome}</h3>
+                                    <div class="flex justify-between items-center mt-2">
+                                        <span class="text-sm text-gray-500 font-bold tracking-wide uppercase">${l.categoria}</span>
+                                        <span class="text-[10px] font-black px-3 py-1.5 rounded-lg tracking-widest ${l.estaAberto() ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}">${l.estaAberto() ? 'ABERTO' : 'FECHADO'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            renderStore() {
+                const loja = state.lojas.find(l => l.id === state.params);
+                const items = state.filterType === 'todos' ? loja.cardapio : loja.cardapio.filter(i => i.tipo === state.filterType);
+                const combosLoja = state.user.favoritos.combos.filter(c => parseInt(c.lojaId) === loja.id);
+
+                document.getElementById('app-view').innerHTML = `
+                    <div class="flex items-center justify-between gap-4 mb-12">
+                        <div class="flex items-center gap-5">
+                            <button onclick="router.goHome()" class="p-4 bg-white hover:bg-gray-50 rounded-2xl border border-gray-100 shadow-sm transition-colors"><i data-lucide="arrow-left" class="w-6 h-6 text-slate-700"></i></button>
+                            <div>
+                                <h1 class="text-3xl font-black text-slate-800 tracking-tight">${loja.nome}</h1>
+                                <button onclick="router.navigate('store_profile', ${loja.id})" class="text-primary font-bold text-sm hover:underline mt-1">Ver Detalhes do Estabelecimento</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${combosLoja.length ? `
+                        <div class="mb-12">
+                            <h2 class="text-xs font-black text-gray-400 uppercase mb-4 tracking-widest">Combos Salvos da Loja</h2>
+                            <div class="flex overflow-x-auto gap-4 pb-6 scrollbar-hide">
+                                ${combosLoja.map((combo, idx) => `
+                                    <div class="flex-none w-72 bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <div class="p-2.5 bg-amber-50 text-amber-500 rounded-xl"><i data-lucide="star" class="w-4 h-4"></i></div>
+                                            <span class="text-[10px] font-black text-gray-300">Combo #${idx + 1}</span>
+                                        </div>
+                                        <p class="text-slate-800 font-bold leading-tight mb-2">Sua Coleção Pronta</p>
+                                        <p class="text-xs text-gray-400 mb-6">${combo.data.length} itens incluídos</p>
+                                        <button onclick="cartUI.loadComboById(${state.user.favoritos.combos.indexOf(combo)})" class="w-full bg-orange-50 text-primary py-3 rounded-xl font-bold text-xs hover:bg-primary hover:text-white transition-all">Adicionar ao Carrinho</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="flex gap-3 mb-10 overflow-x-auto pb-4 scrollbar-hide">
+                        ${['todos', 'lanche', 'pizza', 'bebida'].map(t => `
+                            <button onclick="state.filterType = '${t}'; ui.renderStore()" 
+                                    class="px-8 py-3.5 rounded-[1.5rem] text-sm font-bold border transition-all uppercase tracking-wider ${state.filterType === t ? 'bg-primary border-primary text-white shadow-lg shadow-orange-100' : 'bg-white text-gray-400 border-gray-100 hover:border-primary'}">
+                                ${t}
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${items.map(i => `
+                            <div class="bg-white p-6 rounded-[3rem] border border-gray-100 shadow-sm flex flex-col group ${!i.disponivel ? 'opacity-50 grayscale' : ''}">
+                                <img src="${i.img}" class="w-full h-52 object-cover rounded-[2rem] mb-6 shadow-sm group-hover:shadow-md transition-shadow">
+                                <h4 class="font-black text-slate-800 text-xl mb-2 leading-tight">${i.nome}</h4>
+                                <p class="text-sm text-gray-500 mb-8 font-medium">${i.disponivel ? i.descricao : 'Item temporariamente esgotado nesta loja'}</p>
+                                <div class="mt-auto flex flex-col gap-5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-primary font-black text-2xl">R$ ${i.getPreco().toFixed(2)}</span>
+                                        <div class="flex items-center bg-gray-100 rounded-2xl p-1">
+                                            <button onclick="ui.adjustQtyInMenu(${i.id}, -1)" class="p-2 text-gray-400 hover:text-primary"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                                            <input id="qty-menu-${i.id}" type="number" value="1" min="1" class="w-10 bg-transparent text-center font-bold">
+                                            <button onclick="ui.adjustQtyInMenu(${i.id}, 1)" class="p-2 text-gray-400 hover:text-primary"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                        </div>
+                                    </div>
+                                    <button ${!i.disponivel ? 'disabled' : ''} onclick="cartUI.addItem(${i.id}, ${loja.id}, parseInt(document.getElementById('qty-menu-${i.id}').value))" class="w-full btn-primary py-4 rounded-[1.5rem] font-bold text-lg disabled:bg-gray-200 disabled:text-gray-400 shadow-lg shadow-orange-100 transition-all">
+                                        ${i.disponivel ? 'Adicionar' : 'Esgotado'}
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+            
+            renderOrders() {
+                const meusPedidos = state.pedidos.filter(p => p.clienteEmail === state.user.email).reverse();
+                
+                const statusDict = {
+                    'pendente': { cor: 'text-amber-500', bg: 'bg-amber-50', icon: 'clock', txt: 'Pendente' },
+                    'enviado': { cor: 'text-blue-500', bg: 'bg-blue-50', icon: 'truck', txt: 'Saiu para Entrega' },
+                    'concluido': { cor: 'text-emerald-500', bg: 'bg-emerald-50', icon: 'check-circle', txt: 'Entregue' }
+                };
+
+                document.getElementById('app-view').innerHTML = `
+                    <h1 class="text-4xl font-black text-slate-800 tracking-tight mb-10">Meus Pedidos</h1>
+                    <div class="space-y-6">
+                        ${meusPedidos.map(p => {
+                            const loja = state.lojas.find(l => l.id === p.lojaId);
+                            const st = statusDict[p.status];
+                            return `
+                            <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6 hover:shadow-md transition-all">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <h3 class="font-black text-2xl text-slate-800">${loja?.nome || 'Loja Indisponível'}</h3>
+                                        <span class="px-3 py-1 rounded-xl text-xs font-black uppercase tracking-widest ${st.bg} ${st.cor} flex items-center gap-2"><i data-lucide="${st.icon}" class="w-3 h-3"></i> ${st.txt}</span>
+                                    </div>
+                                    <p class="text-gray-400 text-sm font-bold mb-4">${p.dataFormatada} • Entrega em: ${p.endereco}</p>
+                                    <div class="space-y-1 mb-6 border-l-2 border-gray-100 pl-4">
+                                        ${p.itens.map(c => `<p class="text-sm font-bold text-slate-600"><span class="text-primary mr-1">x${c.qty}</span> ${c.item.nome}</p>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col justify-end md:items-end border-t md:border-t-0 pt-6 md:pt-0">
+                                    <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Total do Pedido</p>
+                                    <p class="text-3xl font-black text-primary">R$ ${p.total.toFixed(2)}</p>
+                                </div>
+                            </div>
+                        `}).join('') || '<div class="text-gray-400 italic font-bold p-12 bg-white rounded-[3rem] border border-gray-100 text-center">Você ainda não fez nenhum pedido.</div>'}
+                    </div>
+                `;
+            },
+
+            // ================= TELA DO GERENTE =================
+            renderManagerDashboard() {
+                const loja = state.lojas.find(l => l.id === state.user.idLoja);
+                const tab = state.managerTab; // 'cardapio' ou 'pedidos'
+                
+                // Pedidos da loja atual
+                const pedidosLoja = state.pedidos.filter(p => p.lojaId === loja.id).reverse();
+                const countPendentes = pedidosLoja.filter(p => p.status === 'pendente').length;
+
+                document.getElementById('app-view').innerHTML = `
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+                        <div>
+                            <h1 class="text-4xl font-black text-slate-800 tracking-tight">Portal do Parceiro</h1>
+                            <p class="text-gray-500 font-medium text-lg mt-1">Sua loja: <span class="text-primary font-bold">${loja.nome}</span></p>
+                        </div>
+                        <button onclick="ui.renderEditStoreModal()" class="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-white border border-gray-200 rounded-[1.5rem] font-bold text-slate-700 hover:bg-gray-50 transition-colors shadow-sm">
+                            <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+                        </button>
+                    </div>
+
+                    <!-- Abas do Gerente -->
+                    <div class="flex gap-4 mb-8 bg-white p-2 rounded-[2rem] w-fit shadow-sm border border-gray-100">
+                        <button onclick="state.managerTab = 'cardapio'; ui.renderManagerDashboard()" class="px-8 py-3 rounded-[1.5rem] font-bold text-sm transition-all ${tab === 'cardapio' ? 'bg-slate-800 text-white' : 'text-gray-500 hover:bg-gray-50'}">Menu e Cardápio</button>
+                        <button onclick="state.managerTab = 'pedidos'; ui.renderManagerDashboard()" class="relative px-8 py-3 rounded-[1.5rem] font-bold text-sm transition-all ${tab === 'pedidos' ? 'bg-slate-800 text-white' : 'text-gray-500 hover:bg-gray-50'}">
+                            Gestão de Pedidos
+                            ${countPendentes > 0 ? `<span class="absolute top-1 right-2 w-3 h-3 bg-primary rounded-full"></span>` : ''}
+                        </button>
+                    </div>
+
+                    ${tab === 'cardapio' ? this._getManagerCardapioHTML(loja) : this._getManagerPedidosHTML(pedidosLoja)}
+                `;
+            },
+
+            _getManagerCardapioHTML(loja) {
+                return `
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                        <div class="lg:col-span-1">
+                            <div class="bg-slate-800 p-8 rounded-[3rem] shadow-xl sticky top-24 text-white overflow-hidden relative">
+                                <div class="absolute top-0 right-0 p-8 opacity-10"><i data-lucide="store" class="w-32 h-32"></i></div>
+                                <img src="${loja.img}" class="w-full h-40 object-cover rounded-[2rem] mb-8 border-4 border-slate-700 shadow-lg relative z-10">
+                                <h3 class="text-2xl font-black mb-1 relative z-10">${loja.nome}</h3>
+                                <p class="text-primary font-bold text-sm mb-8 tracking-widest uppercase relative z-10">${loja.categoria}</p>
+                                <div class="space-y-5 text-sm font-bold relative z-10">
+                                    <div class="flex justify-between items-center p-4 bg-slate-700/50 rounded-2xl">
+                                        <span class="text-gray-400">STATUS HOJE</span> 
+                                        <span class="px-3 py-1 rounded-lg ${loja.estaAberto() ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">${loja.estaAberto() ? 'ABERTA' : 'FECHADA'}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center p-4 bg-slate-700/50 rounded-2xl">
+                                        <span class="text-gray-400">ITENS ATIVOS</span> 
+                                        <span class="text-xl text-white">${loja.cardapio.filter(i => i.disponivel).length}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-2 space-y-8">
+                            <div class="flex justify-between items-center px-2 border-b border-gray-100 pb-4">
+                                <h2 class="text-2xl font-black text-slate-800">Itens do Cardápio</h2>
+                                <button onclick="ui.renderEditItemModal()" class="btn-primary px-5 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-orange-100 text-sm">
+                                    <i data-lucide="plus" class="w-4 h-4"></i> Novo Item
+                                </button>
+                            </div>
+                            <div class="grid gap-5">
+                                ${loja.cardapio.map(i => `
+                                    <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 flex flex-col md:flex-row items-center gap-6 ${!i.disponivel ? 'bg-gray-50' : ''} hover:shadow-md transition-all">
+                                        <img src="${i.img}" class="w-24 h-24 rounded-2xl object-cover ${!i.disponivel ? 'opacity-50 grayscale' : ''} shadow-sm">
+                                        <div class="flex-1 w-full text-center md:text-left">
+                                            <h4 class="font-black text-lg text-slate-800 ${!i.disponivel ? 'text-gray-400' : ''} mb-1">${i.nome}</h4>
+                                            <p class="text-primary font-black text-xl mb-3">R$ ${i.getPreco().toFixed(2)}</p>
+                                        </div>
+                                        <div class="flex flex-col gap-2 w-full md:w-auto">
+                                            <button onclick="ui.toggleItemAvailability(${i.id})" class="px-4 py-3 w-full text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest ${i.disponivel ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}">
+                                                <i data-lucide="${i.disponivel ? 'check-circle' : 'x-circle'}" class="w-4 h-4"></i>
+                                                ${i.disponivel ? 'Disponível' : 'Indisponível'}
+                                            </button>
+                                            <div class="flex gap-2">
+                                                <button onclick="ui.renderEditItemModal(${i.id})" class="flex-1 p-3 bg-blue-50 text-blue-500 hover:bg-blue-100 rounded-xl transition-colors font-bold text-xs"><i data-lucide="edit-3" class="w-4 h-4 mx-auto"></i></button>
+                                                <button onclick="ui.deleteItem(${i.id})" class="flex-1 p-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors font-bold text-xs"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            _getManagerPedidosHTML(pedidos) {
+                if(!pedidos.length) return `<div class="text-center py-20 bg-white rounded-[3rem] border border-gray-100"><i data-lucide="receipt" class="w-16 h-16 text-gray-200 mx-auto mb-4"></i><p class="text-gray-400 font-bold text-lg">Sua loja ainda não recebeu pedidos.</p></div>`;
+                
+                return `
+                    <div class="grid gap-6">
+                        ${pedidos.map(p => `
+                            <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col lg:flex-row gap-8">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <h3 class="font-black text-xl text-slate-800">Pedido #${p.id.toString().slice(-4)}</h3>
+                                        ${p.status === 'pendente' ? `<span class="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest animate-pulse">Novo / Pendente</span>` : ''}
+                                        ${p.status === 'enviado' ? `<span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest">Saiu para Entrega</span>` : ''}
+                                        ${p.status === 'concluido' ? `<span class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest">Concluído</span>` : ''}
+                                    </div>
+                                    <div class="grid md:grid-cols-2 gap-4 mb-6">
+                                        <div class="bg-gray-50 p-4 rounded-2xl">
+                                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Cliente</p>
+                                            <p class="font-bold text-slate-700">${p.clienteEmail}</p>
+                                        </div>
+                                        <div class="bg-gray-50 p-4 rounded-2xl">
+                                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Endereço</p>
+                                            <p class="font-bold text-slate-700">${p.endereco}</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        ${p.itens.map(c => `<p class="text-sm font-bold text-slate-600"><span class="text-primary mr-1">x${c.qty}</span> ${c.item.nome}</p>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-gray-100 pt-6 lg:pt-0 lg:pl-8 lg:min-w-[250px]">
+                                    <div class="mb-6">
+                                        <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Valor Total</p>
+                                        <p class="text-3xl font-black text-primary">R$ ${p.total.toFixed(2)}</p>
+                                        <p class="text-xs font-bold text-gray-400 mt-2">${p.dataFormatada}</p>
+                                    </div>
+                                    <div class="space-y-2">
+                                        ${p.status === 'pendente' ? `<button onclick="ui.updateOrderStatus(${p.id}, 'enviado')" class="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-200">Liberar para Entrega</button>` : ''}
+                                        ${p.status === 'enviado' ? `<button onclick="ui.updateOrderStatus(${p.id}, 'concluido')" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-sm transition-colors shadow-lg shadow-emerald-200">Marcar como Entregue</button>` : ''}
+                                        ${p.status === 'concluido' ? `<p class="text-center font-bold text-emerald-500 p-4 bg-emerald-50 rounded-2xl"><i data-lucide="check" class="w-5 h-5 mx-auto"></i></p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            updateOrderStatus(id, novoStatus) {
+                const p = state.pedidos.find(x => x.id === id);
+                if(p) p.status = novoStatus;
+                this.renderManagerDashboard();
+            },
+
+            // ================= TELA ADMIN GLOBAL =================
+            renderAdminDashboard() {
+                document.getElementById('app-view').innerHTML = `
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
+                        <div>
+                            <h1 class="text-4xl font-black text-slate-800 tracking-tight">Portal Global</h1>
+                            <p class="text-gray-500 font-medium text-lg mt-1">Gestão de estabelecimentos e acesso administrativo.</p>
+                        </div>
+                        <button onclick="ui.renderAdminStoreModal()" class="w-full md:w-auto btn-primary px-8 py-4 rounded-[1.5rem] font-bold flex items-center justify-center gap-3 shadow-lg shadow-orange-100">
+                            <i data-lucide="plus" class="w-5 h-5"></i> Novo Estabelecimento
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${state.lojas.map(l => {
+                            const gerentes = state.usuarios.filter(u => u.role === 'gerente' && u.idLoja === l.id).length;
+                            return `
+                            <div class="bg-white rounded-[3rem] p-8 border border-gray-100 shadow-sm flex flex-col group hover:shadow-xl transition-shadow">
+                                <img src="${l.img}" class="w-full h-44 object-cover rounded-[2rem] mb-6 border border-gray-50">
+                                <h3 class="font-black text-2xl mb-1 text-slate-800">${l.nome}</h3>
+                                <p class="text-xs text-primary font-black uppercase tracking-widest mb-6">${l.categoria} • ${gerentes} Gerente(s)</p>
+                                
+                                <div class="mt-auto grid grid-cols-2 gap-3">
+                                    <button onclick="ui.renderAdminManagers(${l.id})" class="p-4 bg-slate-800 text-white hover:bg-slate-700 rounded-2xl text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-md">
+                                        <i data-lucide="users" class="w-4 h-4"></i> Equipe
+                                    </button>
+                                    <button onclick="ui.renderAdminStoreModal(${l.id})" class="p-4 bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100 rounded-2xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+                                        <i data-lucide="settings-2" class="w-4 h-4"></i> Detalhes
+                                    </button>
+                                    <button onclick="ui.deleteAdminStore(${l.id})" class="col-span-2 p-4 bg-red-50 text-red-500 hover:bg-red-100 rounded-2xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i> Remover da Plataforma
+                                    </button>
+                                </div>
+                            </div>
+                        `}).join('')}
+                    </div>
+                `;
+            },
+            
+            renderAdminManagers(lojaId) {
+                const loja = state.lojas.find(l => l.id === lojaId);
+                const gerentes = state.usuarios.filter(u => u.role === 'gerente' && u.idLoja === lojaId);
+                
+                document.getElementById('app-view').innerHTML = `
+                    <div class="max-w-3xl mx-auto bg-white p-12 rounded-[3.5rem] shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-center mb-10 pb-6 border-b border-gray-100">
+                            <div>
+                                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Equipe Gerencial</h2>
+                                <p class="text-primary font-bold tracking-widest uppercase text-sm mt-1">${loja.nome}</p>
+                            </div>
+                            <button onclick="ui.renderAdminDashboard()" class="p-3 bg-gray-50 text-gray-400 hover:text-slate-800 rounded-full transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+                        </div>
+
+                        <div class="space-y-4 mb-12">
+                            ${gerentes.length ? gerentes.map(g => `
+                                <div class="flex items-center justify-between p-5 bg-gray-50 rounded-3xl border border-gray-100">
+                                    <div class="flex items-center gap-4">
+                                        <img src="${g.avatar}" class="w-12 h-12 rounded-full border-2 border-white shadow-sm">
+                                        <div><p class="font-bold text-slate-800">${g.nome}</p><p class="text-xs font-bold text-gray-400">${g.email}</p></div>
+                                    </div>
+                                    <button onclick="ui.deleteAdminManager('${g.email}', ${lojaId})" class="p-4 text-red-400 hover:text-white hover:bg-red-500 rounded-2xl transition-all shadow-sm"><i data-lucide="user-x" class="w-5 h-5"></i></button>
+                                </div>
+                            `).join('') : '<p class="text-gray-400 italic font-bold p-6 text-center border-2 border-dashed rounded-3xl">Nenhum gerente cadastrado.</p>'}
+                        </div>
+
+                        <div class="bg-slate-800 p-8 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+                            <i data-lucide="shield-alert" class="absolute -right-4 -bottom-4 w-40 h-40 opacity-5"></i>
+                            <h3 class="text-xl font-black mb-6 relative z-10">Conceder Acesso</h3>
+                            <div class="space-y-4 relative z-10">
+                                <input id="nm-nome" placeholder="Nome Completo" class="w-full bg-slate-700 border-none text-white placeholder-gray-400 font-bold rounded-2xl">
+                                <input id="nm-email" type="email" placeholder="E-mail Corporativo" class="w-full bg-slate-700 border-none text-white placeholder-gray-400 font-bold rounded-2xl">
+                                <input id="nm-pass" type="password" placeholder="Senha Temporária" class="w-full bg-slate-700 border-none text-white placeholder-gray-400 font-bold rounded-2xl">
+                                <button onclick="ui.addAdminManager(${lojaId})" class="w-full btn-primary py-4 rounded-2xl font-black mt-2 shadow-lg text-lg">Registrar Gerente</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            addAdminManager(lojaId) {
+                const nome = document.getElementById('nm-nome').value;
+                const email = document.getElementById('nm-email').value;
+                const pass = document.getElementById('nm-pass').value;
+                if(!nome || !email || !pass) return alert("Preencha todos os campos do novo gerente.");
+                if(state.usuarios.find(u => u.email === email)) return alert("E-mail já registrado no sistema.");
+                state.usuarios.push(new Gerente(nome, email, pass, lojaId));
+                this.renderAdminManagers(lojaId);
+            },
+
+            deleteAdminManager(email, lojaId) {
+                if(!confirm("Revogar acesso deste gerente?")) return;
+                state.usuarios = state.usuarios.filter(u => u.email !== email);
+                this.renderAdminManagers(lojaId);
+            },
+
+            adjustQtyInMenu(id, delta) {
+                const el = document.getElementById(`qty-menu-${id}`);
+                if (el) el.value = Math.max(1, parseInt(el.value) + delta);
+            },
+
+            // --- FUNÇÕES COMPARTILHADAS DE MODAL E ESTABELECIMENTO ---
+            renderEditStoreModal() { this.renderAdminStoreModal(); },
+            renderAdminStoreModal(id = null) {
+                const loja = id ? state.lojas.find(l => l.id === id) : (state.user.role === 'gerente' ? state.lojas.find(l => l.id === state.user.idLoja) : new Estabelecimento(Date.now(), "Nova Loja", "", ""));
+                const isNew = !id && state.user.role === 'admin';
+                const dias = { seg: 'Seg', ter: 'Ter', qua: 'Qua', qui: 'Qui', sex: 'Sex', sab: 'Sáb', dom: 'Dom', feriado: 'Feriado' };
+                
+                document.getElementById('app-view').innerHTML = `
+                    <div class="max-w-4xl mx-auto bg-white p-12 rounded-[3.5rem] shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-center mb-10 pb-6 border-b border-gray-100">
+                            <h2 class="text-3xl font-black text-slate-800 tracking-tight">${isNew ? 'Registrar Estabelecimento' : 'Configurações da Loja'}</h2>
+                            <button onclick="${state.user.role === 'admin' ? 'ui.renderAdminDashboard()' : 'ui.renderManagerDashboard()'}" class="p-3 bg-gray-50 text-gray-400 hover:text-slate-800 rounded-full transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+                        </div>
+                        
+                        <div class="space-y-10">
+                            <section class="space-y-5">
+                                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><i data-lucide="store" class="w-4 h-4"></i> Informações Gerais</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div class="col-span-full"><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Nome Fantasia</label><input id="m-nome" value="${loja.nome}" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                                    <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Categoria</label><input id="m-cat" value="${loja.categoria}" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                                    <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Telefone</label><input id="m-tel" value="${loja.telefone}" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                                    <div class="col-span-full"><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">URL da Capa</label><input id="m-img" value="${loja.img}" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                                    <div class="col-span-full"><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Endereço</label><input id="m-end" value="${loja.endereco}" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                                </div>
+                            </section>
+
+                            <section class="space-y-5">
+                                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Cronograma Diário (Hora base)</h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    ${Object.keys(loja.horarios).map(dia => `
+                                        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-center">
+                                            <label class="text-xs font-black uppercase text-slate-800 tracking-widest block mb-3">${dias[dia]}</label>
+                                            <div class="flex items-center justify-center gap-2">
+                                                <input type="number" id="h-${dia}-ab" value="${loja.horarios[dia].ab}" class="bg-white py-2 px-1 text-center font-bold text-sm w-12 border-none shadow-sm rounded-lg" title="Abertura">
+                                                <span class="text-gray-300 font-black">às</span>
+                                                <input type="number" id="h-${dia}-fe" value="${loja.horarios[dia].fe}" class="bg-white py-2 px-1 text-center font-bold text-sm w-12 border-none shadow-sm rounded-lg" title="Fechamento">
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+                        </div>
+                        <button onclick="ui.saveStoreFullInfo(${id})" class="w-full btn-primary py-5 rounded-[2rem] font-black mt-12 text-lg shadow-lg shadow-orange-100">Salvar Dados da Loja</button>
+                    </div>
+                `;
+            },
+            saveStoreFullInfo(editId = null) {
+                const isNew = !editId && state.user.role === 'admin';
+                let loja;
+                if(isNew) { loja = new Estabelecimento(Date.now(), "", "", ""); state.lojas.push(loja); } 
+                else if(editId) loja = state.lojas.find(l => l.id === editId);
+                else loja = state.lojas.find(l => l.id === state.user.idLoja);
+
+                loja.nome = document.getElementById('m-nome').value; loja.categoria = document.getElementById('m-cat').value;
+                loja.img = document.getElementById('m-img').value; loja.endereco = document.getElementById('m-end').value; loja.telefone = document.getElementById('m-tel').value;
+                Object.keys(loja.horarios).forEach(dia => {
+                    loja.horarios[dia].ab = parseInt(document.getElementById(`h-${dia}-ab`).value) || 0;
+                    loja.horarios[dia].fe = parseInt(document.getElementById(`h-${dia}-fe`).value) || 0;
+                });
+                alert("Operação concluída.");
+                if(state.user.role === 'admin') this.renderAdminDashboard(); else this.renderManagerDashboard();
+            },
+            deleteAdminStore(id) {
+                if(!confirm("Atenção Admin: Esta ação apagará a loja e gerentes associados. Continuar?")) return;
+                state.lojas = state.lojas.filter(l => l.id !== id);
+                state.usuarios = state.usuarios.filter(u => !(u.role === 'gerente' && u.idLoja === id));
+                this.renderAdminDashboard();
+            },
+
+            // --- FUNCIONALIDADES DE ITEM (GERENTE) ---
+            renderEditItemModal(itemId = null) {
+                const loja = state.lojas.find(l => l.id === state.user.idLoja);
+                const item = itemId ? loja.cardapio.find(i => i.id === itemId) : null;
+                
+                document.getElementById('app-view').innerHTML = `
+                    <div class="max-w-2xl mx-auto bg-white p-12 rounded-[3.5rem] shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-center mb-8">
+                            <h2 class="text-3xl font-black text-slate-800 tracking-tight">${item ? 'Editar Produto' : 'Novo Produto'}</h2>
+                            <button onclick="ui.renderManagerDashboard()" class="p-3 bg-gray-50 text-gray-400 hover:text-slate-800 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                        </div>
+                        <div class="space-y-5">
+                            <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Nome do Item</label><input id="i-nome" value="${item ? item.nome : ''}" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                            <div class="grid grid-cols-2 gap-5">
+                                <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Preço Final</label><input id="i-preco" type="text" oninput="this.value = formatCurrency(this.value)" value="${item ? formatCurrency(item.getPreco().toFixed(2).replace('.', '')) : ''}" placeholder="R$ 0,00" class="bg-gray-50 border-none mt-1 font-black text-slate-800 text-lg"></div>
+                                <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Categoria</label><select id="i-tipo" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"><option value="lanche" ${item?.tipo === 'lanche' ? 'selected' : ''}>Lanche</option><option value="pizza" ${item?.tipo === 'pizza' ? 'selected' : ''}>Pizza</option><option value="bebida" ${item?.tipo === 'bebida' ? 'selected' : ''}>Bebida</option></select></div>
+                            </div>
+                            <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Descrição Atraente</label><textarea id="i-desc" class="bg-gray-50 border-none h-28 mt-1 font-medium text-slate-600 resize-none">${item ? item.descricao : ''}</textarea></div>
+                            <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">URL da Fotografia</label><input id="i-img" value="${item ? item.img : ''}" class="bg-gray-50 border-none mt-1 font-medium text-slate-600"></div>
+                            <button onclick="ui.saveItem(${itemId})" class="w-full btn-primary py-5 rounded-[2rem] font-black text-lg shadow-lg shadow-orange-100 mt-6">Salvar Produto</button>
+                        </div>
+                    </div>
+                `;
+            },
+            saveItem(itemId) {
+                const loja = state.lojas.find(l => l.id === state.user.idLoja);
+                const nome = document.getElementById('i-nome').value;
+                const preco = parseCurrency(document.getElementById('i-preco').value);
+                if(!nome || preco <= 0) return alert("Preencha nome e preço.");
+                if(itemId) {
+                    const i = loja.cardapio.find(x => x.id === itemId);
+                    i.nome = nome; i.setPreco(preco); i.tipo = document.getElementById('i-tipo').value; i.descricao = document.getElementById('i-desc').value; i.img = document.getElementById('i-img').value;
+                } else {
+                    loja.cardapio.push(new ItemCardapio(Date.now(), nome, preco, document.getElementById('i-img').value, document.getElementById('i-tipo').value, document.getElementById('i-desc').value));
+                }
+                this.renderManagerDashboard();
+            },
+            toggleItemAvailability(itemId) {
+                const loja = state.lojas.find(l => l.id === state.user.idLoja);
+                loja.cardapio.find(i => i.id === itemId).toggleStatus();
+                this.renderManagerDashboard();
+            },
+            deleteItem(itemId) {
+                if(!confirm("Excluir definitivamente este item?")) return;
+                const loja = state.lojas.find(l => l.id === state.user.idLoja);
+                loja.cardapio = loja.cardapio.filter(i => i.id !== itemId);
+                this.renderManagerDashboard();
+            },
+
+            // --- OUTRAS TELAS ---
+            renderLogin() {
+                document.getElementById('app-view').innerHTML = `
+                    <div class="max-w-md mx-auto bg-white p-12 rounded-[3.5rem] shadow-sm border border-gray-100 mt-12 text-center">
+                        <div class="w-20 h-20 bg-orange-50 text-primary rounded-[1.5rem] flex items-center justify-center mx-auto mb-8 shadow-inner"><i data-lucide="lock" class="w-8 h-8"></i></div>
+                        <h2 class="text-3xl font-black mb-10 tracking-tight text-slate-800">Acesso Seguro</h2>
+                        <div class="space-y-4">
+                            <input id="l-email" type="email" placeholder="Endereço de e-mail" class="bg-gray-50 border-none font-bold text-slate-800">
+                            <input id="l-pass" type="password" placeholder="Sua senha" class="bg-gray-50 border-none font-bold text-slate-800">
+                            <button onclick="auth.login(document.getElementById('l-email').value, document.getElementById('l-pass').value)" class="w-full btn-primary py-5 rounded-[1.5rem] font-black mt-2 shadow-lg shadow-orange-100 text-lg">Entrar</button>
+                            <div class="pt-10 mt-4 border-t border-gray-100">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6"><i data-lucide="beaker" class="w-3 h-3 inline-block"></i> Acesso (Aula Prática)</p>
+                                <div class="flex flex-col gap-3">
+                                    <button onclick="auth.login('cliente@email.com', '')" class="w-full py-4 bg-white border border-gray-200 rounded-[1.5rem] text-xs font-black text-gray-600 hover:border-primary hover:text-primary transition-all flex justify-center items-center gap-2"><i data-lucide="user" class="w-4 h-4"></i> Simular Cliente</button>
+                                    <button onclick="auth.login('gerente@email.com', '')" class="w-full py-4 bg-white border border-gray-200 rounded-[1.5rem] text-xs font-black text-gray-600 hover:border-blue-500 hover:text-blue-500 transition-all flex justify-center items-center gap-2"><i data-lucide="store" class="w-4 h-4"></i> Simular Gerente</button>
+                                    <button onclick="auth.login('admin@email.com', '')" class="w-full py-4 bg-slate-800 text-white rounded-[1.5rem] text-xs font-black hover:bg-slate-700 transition-all flex justify-center items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4"></i> Simular Admin Global</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            renderRegister() {
+                document.getElementById('app-view').innerHTML = `
+                    <div class="max-w-md mx-auto bg-white p-12 rounded-[3.5rem] shadow-sm border border-gray-100 mt-12">
+                        <h2 class="text-3xl font-black text-center mb-10 text-slate-800 tracking-tight">Criar Conta</h2>
+                        <div class="space-y-5">
+                            <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Nome Completo</label><input id="r-nome" type="text" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                            <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">E-mail</label><input id="r-email" type="email" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                            <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Senha de Acesso</label><input id="r-pass" type="password" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                            <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Nascimento</label><input id="r-nasc" type="date" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                            <button onclick="auth.register(document.getElementById('r-nome').value, document.getElementById('r-email').value, document.getElementById('r-pass').value, document.getElementById('r-nasc').value)" class="w-full btn-primary py-5 rounded-[1.5rem] font-black mt-6 text-lg">Concluir Registro</button>
+                            <p class="text-center text-sm text-gray-400 mt-6 font-bold">Já possui acesso? <button onclick="router.navigate('login')" class="text-primary hover:underline">Entrar</button></p>
+                        </div>
+                    </div>
+                `;
+            },
+            renderSettings() {
+                document.getElementById('app-view').innerHTML = `
+                    <div class="max-w-2xl mx-auto bg-white p-12 rounded-[3.5rem] shadow-sm border border-gray-100">
+                        <h2 class="text-3xl font-black mb-10 text-slate-800 tracking-tight">Preferências</h2>
+                        <div class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Seu Nome</label><input id="s-nome" value="${state.user.nome}" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                                <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Data de Nascimento</label><input id="s-nasc" type="date" value="${state.user.nascimento}" class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                            </div>
+                            <div><label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Endereço de Entrega Padrão</label><input id="s-end" value="${state.user.endereco}" placeholder="Rua, Número, Bairro..." class="bg-gray-50 border-none mt-1 font-bold text-slate-800"></div>
+                            <div class="pt-8 border-t border-gray-100">
+                                <h4 class="font-black mb-6 text-slate-700 tracking-tight">Segurança</h4>
+                                <div class="grid gap-4"><input id="s-pass-now" type="password" placeholder="Senha Atual (Obrigatório para trocar)" class="bg-gray-50 border-none font-bold"><input id="s-pass-new" type="password" placeholder="Definir Nova Senha" class="bg-gray-50 border-none font-bold"></div>
+                            </div>
+                            <button onclick="ui.saveSettings()" class="w-full btn-primary py-5 rounded-[2rem] font-black mt-8 shadow-lg text-lg">Gravar Alterações</button>
+                        </div>
+                    </div>
+                `;
+            },
+            saveSettings() {
+                const u = state.user;
+                if(document.getElementById('s-pass-new').value) {
+                    if(!u.validarSenhaAtual(document.getElementById('s-pass-now').value)) return alert("Senha atual não confere.");
+                    u.atualizarSenha(document.getElementById('s-pass-new').value);
+                }
+                u.nome = document.getElementById('s-nome').value; u.nascimento = document.getElementById('s-nasc').value; u.endereco = document.getElementById('s-end').value;
+                alert("Dados atualizados."); router.navigate('profile');
+            },
+            renderProfile() {
+                const u = state.user;
+                document.getElementById('app-view').innerHTML = `
+                    <div class="max-w-2xl mx-auto bg-white p-12 rounded-[4rem] shadow-sm border border-gray-100 text-center relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-32 bg-slate-800"></div>
+                        <div class="relative z-10">
+                            <img src="${u.avatar}" class="w-36 h-36 mx-auto rounded-[2.5rem] bg-white border-8 border-white shadow-xl mb-6">
+                            <h2 class="text-4xl font-black text-slate-800 mb-1 tracking-tight">${u.nome}</h2>
+                            <p class="text-gray-500 font-bold mb-10">${u.email}</p>
+                            <div class="grid grid-cols-2 gap-6 text-left">
+                                <div class="p-6 bg-gray-50 rounded-[2rem]"><p class="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Idade Verificada</p><p class="font-black text-slate-700 text-xl">${u.idade !== null ? u.idade + ' anos' : 'Não consta'}</p></div>
+                                <div class="p-6 bg-gray-50 rounded-[2rem]"><p class="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Minha Coleção</p><p class="font-black text-slate-700 text-xl">${u.favoritos.lojas.length + u.favoritos.itens.length} Salvos</p></div>
+                            </div>
+                            <div class="mt-6 p-6 bg-orange-50 rounded-[2rem] text-left border border-orange-100">
+                                <p class="text-[10px] font-black text-primary uppercase mb-2 tracking-widest">Local de Entrega Principal</p>
+                                <p class="font-black text-slate-800">${u.endereco || 'Acesse configurações para definir'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            // --- CÓDIGO DO CARRINHO E CHECKOUT ---
+            openCheckoutModal() {
+                if(!state.cart.length) return alert("Seu carrinho está vazio.");
+                if(!state.user.endereco) return alert("Por favor, configure seu endereço de entrega no perfil.");
+                document.getElementById('checkout-address').innerText = state.user.endereco;
+                document.getElementById('checkout-modal').classList.remove('hidden');
+            },
+            closeCheckoutModal() { document.getElementById('checkout-modal').classList.add('hidden'); },
+            openAgeModal() { document.getElementById('age-modal').classList.remove('hidden'); },
+            closeAgeModal(confirm) { 
+                document.getElementById('age-modal').classList.add('hidden'); 
+                if(confirm) cartUI.confirmAdd(state.pendingItem, state.pendingQty, state.pendingItemLojaId);
+            }
+        };
+
+        const cartUI = {
+            toggle: () => document.getElementById('cart-sidebar').classList.toggle('translate-x-full'),
+            addItem(id, lojaId, qty) {
+                const item = state.lojas.find(l => l.id === lojaId).cardapio.find(i => i.id === id);
+                if(!item.disponivel) return;
+                if(item.isAlcoolico && (state.user.idade === null || state.user.idade < 18)) {
+                    state.pendingItem = item; state.pendingQty = qty; state.pendingItemLojaId = lojaId;
+                    ui.openAgeModal(); return;
+                }
+                this.confirmAdd(item, qty, lojaId);
+            },
+            confirmAdd(item, qty, lojaId) {
+                state.cart.push({ item, qty, lojaId, uuid: Math.random().toString(36).substr(2,9) });
+                this.update();
+            },
+            update() {
+                const total = state.cart.reduce((acc, c) => acc + (c.item.getPreco() * c.qty), 0);
+                document.getElementById('cart-count').innerText = state.cart.length;
+                document.getElementById('cart-total').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('checkout-btn').disabled = !state.cart.length;
+                document.getElementById('fav-cart-btn').disabled = !state.cart.length;
+                
+                const list = document.getElementById('cart-items');
+                list.innerHTML = state.cart.length ? state.cart.map((c, idx) => `
+                    <div class="flex gap-4 items-center bg-white p-4 rounded-[1.5rem] shadow-sm border border-gray-50">
+                        <img src="${c.item.img}" class="w-14 h-14 rounded-2xl object-cover">
+                        <div class="flex-1 text-xs">
+                            <p class="font-black text-slate-800 leading-tight mb-2">${c.item.nome}</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center bg-gray-50 rounded-lg p-1">
+                                    <button onclick="cartUI.adjustQtyInCart(${idx}, -1)" class="p-1 text-gray-400 hover:text-primary"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <span class="px-2 font-black text-xs min-w-[20px] text-center">${c.qty}</span>
+                                    <button onclick="cartUI.adjustQtyInCart(${idx}, 1)" class="p-1 text-gray-400 hover:text-primary"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                </div>
+                                <span class="text-primary font-black">R$ ${(c.item.getPreco() * c.qty).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                            </div>
+                        </div>
+                        <button onclick="cartUI.remove(${idx})" class="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                `).join('') : '<div class="text-center py-20 opacity-20"><i data-lucide="shopping-basket" class="w-16 h-16 mx-auto mb-4"></i><p class="font-black">Carrinho Limpo</p></div>';
+                lucide.createIcons();
+            },
+            adjustQtyInCart(idx, delta) { state.cart[idx].qty = Math.max(1, state.cart[idx].qty + delta); this.update(); },
+            remove(idx) { state.cart.splice(idx, 1); this.update(); },
+            saveAsCombo() {
+                if(!state.cart.length) return;
+                const lojaId = state.params || state.cart[0].lojaId; 
+                state.user.favoritos.combos.push({ lojaId: lojaId, data: state.cart.map(c => ({item: c.item, qty: c.qty, lojaId: c.lojaId})) });
+                const btn = document.getElementById('fav-cart-btn-text'); btn.innerText = "Combo Gravado!"; setTimeout(() => btn.innerText = "Favoritar Combo", 2000);
+            },
+            loadComboById(idx) {
+                const combo = state.user.favoritos.combos[idx];
+                state.cart = combo.data.map(c => ({ item: c.item, qty: c.qty, lojaId: c.lojaId, uuid: Math.random().toString(36).substr(2,9) }));
+                this.update(); this.toggle();
+            },
+            processCheckout() {
+                // Agrupar itens por loja
+                const agrupado = state.cart.reduce((acc, c) => {
+                    acc[c.lojaId] = acc[c.lojaId] || [];
+                    acc[c.lojaId].push(c);
+                    return acc;
+                }, {});
+
+                for(const lojaId in agrupado) {
+                    const itens = agrupado[lojaId];
+                    const total = itens.reduce((s, c) => s + (c.item.getPreco() * c.qty), 0);
+                    state.pedidos.push(new Pedido(Date.now() + parseInt(lojaId), state.user.email, parseInt(lojaId), itens, total, state.user.endereco));
+                }
+                
+                state.cart = [];
+                this.update();
+                this.toggle();
+                ui.closeCheckoutModal();
+                router.navigate('orders');
+            }
+        };
+
+        window.onload = () => { ui.updateNav(); ui.render(); };
+    </script>
+</body>
+</html>
