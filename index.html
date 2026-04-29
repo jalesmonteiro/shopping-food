@@ -33,7 +33,7 @@
 <body class="antialiased">
 
     <!-- BARRA DE NAVEGAÇÃO -->
-    <nav class="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
+    <nav style="display:none;" class="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-8">
                 <div class="flex items-center gap-2 cursor-pointer" onclick="router.goHome()">
@@ -64,7 +64,7 @@
                         <button class="w-10 h-10 bg-gray-100 rounded-full overflow-hidden border-2 border-transparent hover:border-primary transition-all shadow-sm">
                             <img id="user-avatar" src="" alt="User">
                         </button>
-                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 hidden group-hover:block z-50">
+                        <div class="absolute right-0 top-full mt-1 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 opacity-0 invisible pointer-events-none transform translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto group-hover:translate-y-0 z-50">
                             <div class="px-4 py-3 border-b border-gray-50 mb-2">
                                 <p id="user-dropdown-name" class="text-sm font-bold text-slate-800 truncate"></p>
                                 <p id="user-dropdown-role" class="text-[10px] font-black text-primary uppercase tracking-widest"></p>
@@ -319,8 +319,22 @@
             },
 
             render() {
-                if(!state.user && !['login', 'register'].includes(state.view)) { this.renderLogin(); return; }
-                switch(state.view) {
+                const navEl = document.querySelector('nav');
+                console.log('[ui.render] state.view=', state.view, 'state.user=', state.user ? state.user.email : null);
+                // Se usuário não autenticado e a view não for login/register, forçamos a renderização de login
+                const effectiveView = (!state.user && !['login', 'register'].includes(state.view)) ? 'login' : state.view;
+                console.log('[ui.render] effectiveView=', effectiveView);
+                if(navEl) {
+                    if(effectiveView === 'login' || effectiveView === 'register') {
+                        navEl.style.display = 'none';
+                        console.log('[ui.render] nav hidden (login/register)');
+                    } else {
+                        navEl.style.display = '';
+                        console.log('[ui.render] nav shown');
+                    }
+                }
+                if(effectiveView === 'login') { this.renderLogin(); lucide.createIcons(); return; }
+                switch(effectiveView) {
                     case 'home': this.renderHome(); break;
                     case 'login': this.renderLogin(); break;
                     case 'register': this.renderRegister(); break;
@@ -846,6 +860,7 @@
                             <input id="l-email" type="email" placeholder="Endereço de e-mail" class="bg-gray-50 border-none font-bold text-slate-800">
                             <input id="l-pass" type="password" placeholder="Sua senha" class="bg-gray-50 border-none font-bold text-slate-800">
                             <button onclick="auth.login(document.getElementById('l-email').value, document.getElementById('l-pass').value)" class="w-full btn-primary py-5 rounded-[1.5rem] font-black mt-2 shadow-lg shadow-orange-100 text-lg">Entrar</button>
+                            <p class="text-center text-sm text-gray-400 mt-6 font-bold">Não tem conta? <button onclick="router.navigate('register')" class="text-primary hover:underline">Cadastre-se</button></p>
                             <div class="pt-10 mt-4 border-t border-gray-100">
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6"><i data-lucide="beaker" class="w-3 h-3 inline-block"></i> Acesso (Aula Prática)</p>
                                 <div class="flex flex-col gap-3">
@@ -1062,7 +1077,7 @@
             }
         };
 
-        window.onload = () => { ui.updateNav(); ui.render(); };
+        window.onload = () => { console.log('window.onload state.view=', state.view, 'state.user=', state.user ? state.user.email : null); ui.updateNav(); ui.render(); };
     </script>
 </body>
 </html>
